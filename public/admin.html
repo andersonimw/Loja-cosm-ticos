@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Loja de Cosméticos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #e91e63; margin-bottom: 30px; text-align: center; }
+        h2 { color: #333; margin: 30px 0 20px; border-bottom: 2px solid #e91e63; padding-bottom: 10px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        textarea { min-height: 100px; resize: vertical; }
+        button { background: #e91e63; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background: #c2185b; }
+        .preview-img { max-width: 200px; margin-top: 10px; border-radius: 5px; display: none; }
+        .mensagem { padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .sucesso { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .erro { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .produto-item { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px; display: flex; gap: 15px; align-items: center; }
+        .produto-item img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; }
+        .produto-info { flex: 1; }
+        .produto-info h3 { color: #e91e63; margin-bottom: 5px; }
+        .produto-info p { color: #666; margin: 3px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌸 Painel Admin - Loja de Cosméticos</h1>
+
+        <h2>📦 Adicionar Produto</h2>
+        <form id="formProduto" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Nome do Produto:</label>
+                <input type="text" id="nomeProduto" required>
+            </div>
+            <div class="form-group">
+                <label>Descrição:</label>
+                <textarea id="descricao" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Preço (R$):</label>
+                <input type="number" id="preco" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label>Estoque:</label>
+                <input type="number" id="estoque" required>
+            </div>
+            <div class="form-group">
+                <label>Foto do Produto:</label>
+                <input type="file" id="imagem" accept="image/*" required>
+                <img id="preview" class="preview-img">
+            </div>
+            <button type="submit">➕ Adicionar Produto</button>
+        </form>
+        <div id="mensagemProduto"></div>
+
+        <h2>📋 Produtos Cadastrados</h2>
+        <div id="listaProdutos"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        // Preview da imagem
+        document.getElementById('imagem').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Adicionar produto
+        document.getElementById('formProduto').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('nome', document.getElementById('nomeProduto').value);
+            formData.append('descricao', document.getElementById('descricao').value);
+            formData.append('preco', document.getElementById('preco').value);
+            formData.append('estoque', document.getElementById('estoque').value);
+            formData.append('imagem', document.getElementById('imagem').files[0]);
+
+            try {
+                const response = await fetch(`${API_URL}/api/produtos`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('mensagemProduto').innerHTML = '<div class="mensagem sucesso">✅ Produto adicionado com sucesso!</div>';
+                    document.getElementById('formProduto').reset();
+                    document.getElementById('preview').style.display = 'none';
+                    carregarProdutos();
+                }
+            } catch (error) {
+                document.getElementById('mensagemProduto').innerHTML = '<div class="mensagem erro">❌ Erro ao adicionar produto!</div>';
+            }
+        });
+
+        // Carregar produtos
+        async function carregarProdutos() {
+            try {
+                const response = await fetch(`${API_URL}/api/produtos`);
+                const produtos = await response.json();
+                
+                const lista = document.getElementById('listaProdutos');
+                lista.innerHTML = produtos.map(p => `
+                    <div class="produto-item">
+                        <img src="${API_URL}${p.imagemUrl}" alt="${p.nome}">
+                        <div class="produto-info">
+                            <h3>${p.nome}</h3>
+                            <p>${p.descricao}</p>
+                            <p><strong>R$ ${p.preco.toFixed(2)}</strong></p>
+                            <p>Estoque: ${p.estoque} unidades</p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+            }
+        }
+
+        // Carregar produtos ao abrir a página
+        carregarProdutos();
+    </script>
+</body>
+</html>

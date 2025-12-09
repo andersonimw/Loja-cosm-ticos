@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja de Cosméticos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #ffeef8 0%, #ffe5f1 100%); }
+        header { background: #e91e63; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        header h1 { font-size: 32px; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .produtos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-top: 30px; }
+        .produto-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .produto-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .produto-card img { width: 100%; height: 250px; object-fit: cover; }
+        .produto-info { padding: 20px; }
+        .produto-info h3 { color: #e91e63; margin-bottom: 10px; font-size: 20px; }
+        .produto-info p { color: #666; margin-bottom: 15px; font-size: 14px; }
+        .estoque { color: #999; font-size: 12px; margin: 10px 0; }
+        
+        .secao-compra { background: #f9f9f9; padding: 15px; border-radius: 10px; margin: 10px 0; border: 2px solid #e0e0e0; }
+        .secao-compra.varejo { border-color: #e91e63; }
+        .secao-compra.atacado { border-color: #4caf50; }
+        
+        .secao-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .tipo-badge { padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+        .tipo-badge.varejo { background: #e91e63; color: white; }
+        .tipo-badge.atacado { background: #4caf50; color: white; }
+        .preco-grande { font-size: 24px; font-weight: bold; }
+        .preco-grande.varejo { color: #e91e63; }
+        .preco-grande.atacado { color: #4caf50; }
+        
+        .info-minimo { font-size: 11px; color: #666; margin-bottom: 10px; background: #fff3cd; padding: 5px 8px; border-radius: 5px; }
+        .economia-badge { font-size: 11px; background: #d4edda; color: #155724; padding: 5px 8px; border-radius: 5px; font-weight: bold; }
+        
+        .quantidade-control { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+        .quantidade-control button { width: 40px; height: 40px; border: none; color: white; border-radius: 8px; font-size: 20px; cursor: pointer; font-weight: bold; }
+        .quantidade-control.varejo button { background: #e91e63; }
+        .quantidade-control.atacado button { background: #4caf50; }
+        .quantidade-control button:hover { opacity: 0.8; }
+        .quantidade-control input { width: 70px; text-align: center; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; font-weight: bold; padding: 8px; }
+        
+        .btn-adicionar { border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; width: 100%; transition: all 0.3s; }
+        .btn-adicionar.varejo { background: #e91e63; color: white; }
+        .btn-adicionar.atacado { background: #4caf50; color: white; }
+        .btn-adicionar:hover { opacity: 0.9; transform: scale(1.02); }
+        
+        .carrinho-icon { position: fixed; bottom: 30px; right: 30px; background: #e91e63; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4); z-index: 999; }
+        .carrinho-count { position: absolute; top: -5px; right: -5px; background: #fff; color: #e91e63; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
+        .modal-content { background: white; max-width: 650px; margin: 30px auto; padding: 30px; border-radius: 15px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .close { font-size: 30px; cursor: pointer; color: #999; }
+        
+        .carrinho-item { background: #f9f9f9; padding: 18px; margin: 12px 0; border-radius: 10px; border-left: 4px solid #ddd; }
+        .carrinho-item.varejo { border-left-color: #e91e63; }
+        .carrinho-item.atacado { border-left-color: #4caf50; }
+        .carrinho-item-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .carrinho-item-info h4 { color: #333; margin-bottom: 8px; font-size: 16px; }
+        .carrinho-tipo-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 8px; }
+        .carrinho-tipo-badge.varejo { background: #ffe5f1; color: #e91e63; }
+        .carrinho-tipo-badge.atacado { background: #e8f5e9; color: #4caf50; }
+        
+        .carrinho-detalhes { font-size: 14px; color: #666; margin: 5px 0; }
+        .carrinho-controles { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0; }
+        .carrinho-quantidade { display: flex; align-items: center; gap: 10px; }
+        .carrinho-quantidade button { width: 32px; height: 32px; border: none; background: #e91e63; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .carrinho-quantidade span { min-width: 40px; text-align: center; font-weight: bold; font-size: 16px; }
+        .btn-remover { background: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        
+        .resumo-compra { background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .resumo-linha { display: flex; justify-content: space-between; margin: 8px 0; font-size: 15px; }
+        .economia-total { color: #4caf50; font-weight: bold; font-size: 16px; }
+        .total-final { font-size: 26px; font-weight: bold; color: #e91e63; margin-top: 15px; padding-top: 15px; border-top: 2px solid #ddd; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .btn-finalizar { background: #4caf50; color: white; border: none; padding: 16px; border-radius: 10px; cursor: pointer; font-size: 18px; font-weight: bold; width: 100%; margin-top: 20px; }
+        .btn-finalizar:hover { background: #45a049; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌸 Loja de Cosméticos Premium</h1>
+        <p>Os melhores produtos para sua beleza</p>
+    </header>
+
+    <div class="container">
+        <div class="produtos-grid" id="produtos"></div>
+    </div>
+
+    <div class="carrinho-icon" onclick="abrirCarrinho()">
+        🛒
+        <span class="carrinho-count" id="carrinhoCount">0</span>
+    </div>
+
+    <div id="modalCarrinho" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🛒 Meu Carrinho</h2>
+                <span class="close" onclick="fecharCarrinho()">&times;</span>
+            </div>
+            <div id="itensCarrinho"></div>
+            <div class="resumo-compra" id="resumoCompra"></div>
+            
+            <h3 style="margin-top: 25px; color: #e91e63; margin-bottom: 15px;">📦 Dados para Entrega</h3>
+            <form id="formCheckout">
+                <div class="form-group">
+                    <label>Nome Completo:</label>
+                    <input type="text" id="nomeCliente" required>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="emailCliente" required>
+                </div>
+                <div class="form-group">
+                    <label>Telefone:</label>
+                    <input type="tel" id="telefoneCliente" required>
+                </div>
+                <div class="form-group">
+                    <label>Endereço Completo:</label>
+                    <input type="text" id="enderecoCliente" required>
+                </div>
+                <div class="form-group">
+                    <label>CEP:</label>
+                    <input type="text" id="cepCliente" required>
+                </div>
+                <button type="submit" class="btn-finalizar">💳 Finalizar Compra</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        let carrinho = [];
+        const DESCONTO_ATACADO = 0.20;
+        const MIN_ATACADO = 10;
+
+        async function carregarProdutos() {
+            try {
+                const response = await fetch(`${API_URL}/api/produtos`);
+                const produtos = await response.json();
+                
+                const grid = document.getElementById('produtos');
+                grid.innerHTML = produtos.map(p => {
+                    const precoAtacado = p.preco * (1 - DESCONTO_ATACADO);
+                    const economia = p.preco - precoAtacado;
+                    return `
+                    <div class="produto-card">
+                        <img src="${API_URL}${p.imagemUrl}" alt="${p.nome}">
+                        <div class="produto-info">
+                            <h3>${p.nome}</h3>
+                            <p>${p.descricao}</p>
+                            <div class="estoque">📦 Estoque: ${p.estoque} unidades</div>
+                            
+                            <!-- SEÇÃO VAREJO -->
+                            <div class="secao-compra varejo">
+                                <div class="secao-header">
+                                    <span class="tipo-badge varejo">🛍️ VAREJO</span>
+                                    <span class="preco-grande varejo">R$ ${p.preco.toFixed(2)}</span>
+                                </div>
+                                <div class="quantidade-control varejo">
+                                    <button onclick="diminuirQtd('varejo-${p.id}')">−</button>
+                                    <input type="number" id="varejo-${p.id}" value="1" min="1" max="${p.estoque}" readonly>
+                                    <button onclick="aumentarQtd('varejo-${p.id}', ${p.estoque})">+</button>
+                                </div>
+                                <button class="btn-adicionar varejo" onclick="adicionarAoCarrinho('${p.id}', '${p.nome}', ${p.preco}, '${p.imagemUrl}', 'varejo')">
+                                    🛒 Adicionar no Varejo
+                                </button>
+                            </div>
+                            
+                            <!-- SEÇÃO ATACADO -->
+                            <div class="secao-compra atacado">
+                                <div class="secao-header">
+                                    <span class="tipo-badge atacado">📦 ATACADO</span>
+                                    <span class="preco-grande atacado">R$ ${precoAtacado.toFixed(2)}</span>
+                                </div>
+                                <div class="info-minimo">⚠️ Mínimo: ${MIN_ATACADO} unidades</div>
+                                <div class="economia-badge">💰 Economize R$ ${economia.toFixed(2)} por unidade</div>
+                                <div class="quantidade-control atacado">
+                                    <button onclick="diminuirQtdAtacado('atacado-${p.id}')">−</button>
+                                    <input type="number" id="atacado-${p.id}" value="${MIN_ATACADO}" min="${MIN_ATACADO}" max="${p.estoque}" readonly>
+                                    <button onclick="aumentarQtd('atacado-${p.id}', ${p.estoque})">+</button>
+                                </div>
+                                <button class="btn-adicionar atacado" onclick="adicionarAoCarrinho('${p.id}', '${p.nome}', ${precoAtacado}, '${p.imagemUrl}', 'atacado')">
+                                    📦 Adicionar no Atacado
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+            }
+        }
+
+        function diminuirQtd(inputId) {
+            const input = document.getElementById(inputId);
+            if (input.value > 1) input.value = parseInt(input.value) - 1;
+        }
+
+        function diminuirQtdAtacado(inputId) {
+            const input = document.getElementById(inputId);
+            if (parseInt(input.value) > MIN_ATACADO) input.value = parseInt(input.value) - 1;
+        }
+
+        function aumentarQtd(inputId, max) {
+            const input = document.getElementById(inputId);
+            if (parseInt(input.value) < max) input.value = parseInt(input.value) + 1;
+        }
+
+        function adicionarAoCarrinho(id, nome, preco, imagem, tipo) {
+            const inputId = `${tipo}-${id}`;
+            const qtd = parseInt(document.getElementById(inputId).value);
+            
+            if (tipo === 'atacado' && qtd < MIN_ATACADO) {
+                alert(`❌ Quantidade mínima para atacado: ${MIN_ATACADO} unidades`);
+                return;
+            }
+            
+            carrinho.push({ 
+                id: Date.now() + Math.random(), 
+                produtoId: id,
+                nome, 
+                preco, 
+                imagem, 
+                quantidade: qtd, 
+                tipo 
+            });
+            
+            atualizarCarrinho();
+            alert(`✅ ${qtd}x ${nome} adicionado ao carrinho (${tipo.toUpperCase()})!`);
+            
+            if (tipo === 'atacado') {
+                document.getElementById(inputId).value = MIN_ATACADO;
+            } else {
+                document.getElementById(inputId).value = 1;
+            }
+        }
+
+        function atualizarCarrinho() {
+            const totalItens = carrinho.reduce((sum, item) => sum + item.quantidade, 0);
+            document.getElementById('carrinhoCount').textContent = totalItens;
+        }
+
+        function abrirCarrinho() {
+            const itens = document.getElementById('itensCarrinho');
+            const total = carrinho.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+            
+            itens.innerHTML = carrinho.length > 0 ? carrinho.map((item, index) => `
+                <div class="carrinho-item ${item.tipo}">
+                    <div class="carrinho-item-header">
+                        <div class="carrinho-item-info">
+                            <h4>${item.nome}</h4>
+                            <span class="carrinho-tipo-badge ${item.tipo}">
+                                ${item.tipo === 'varejo' ? '🛍️ VAREJO' : '📦 ATACADO'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="carrinho-detalhes">
+                        💰 R$ ${item.preco.toFixed(2)} x ${item.quantidade} un. = <strong>R$ ${(item.preco * item.quantidade).toFixed(2)}</strong>
+                    </div>
+                    <div class="carrinho-controles">
+                        <div class="carrinho-quantidade">
+                            <button onclick="alterarQtdCarrinho(${index}, -1)">−</button>
+                            <span>${item.quantidade}</span>
+                            <button onclick="alterarQtdCarrinho(${index}, 1)">+</button>
+                        </div>
+                        <button class="btn-remover" onclick="removerItem(${index})">🗑️ Remover</button>
+                    </div>
+                </div>
+            `).join('') : '<p style="text-align:center; color:#999; padding:20px;">Carrinho vazio</p>';
+            
+            // Resumo
+            const itensVarejo = carrinho.filter(i => i.tipo === 'varejo');
+            const itensAtacado = carrinho.filter(i => i.tipo === 'atacado');
+            const totalVarejo = itensVarejo.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+            const totalAtacado = itensAtacado.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+            
+            document.getElementById('resumoCompra').innerHTML = carrinho.length > 0 ? `
+                <div class="resumo-linha">Subtotal Varejo: <strong>R$ ${totalVarejo.toFixed(2)}</strong></div>
+                <div class="resumo-linha">Subtotal Atacado: <strong>R$ ${totalAtacado.toFixed(2)}</strong></div>
+                <div class="total-final">Total: R$ ${total.toFixed(2)}</div>
+            ` : '';
+            
+            document.getElementById('modalCarrinho').style.display = 'block';
+        }
+
+        function alterarQtdCarrinho(index, delta) {
+            const item = carrinho[index];
+            const novaQtd = item.quantidade + delta;
+            
+            if (novaQtd <= 0) {
+                removerItem(index);
+                return;
+            }
+            
+            if (item.tipo === 'atacado' && novaQtd < MIN_ATACADO) {
+                alert(`❌ Quantidade mínima para atacado: ${MIN_ATACADO} unidades`);
+                return;
+            }
+            
+            item.quantidade = novaQtd;
+            atualizarCarrinho();
+            abrirCarrinho();
+        }
+
+        function fecharCarrinho() {
+            document.getElementById('modalCarrinho').style.display = 'none';
+        }
+
+        function removerItem(index) {
+            carrinho.splice(index, 1);
+            atualizarCarrinho();
+            abrirCarrinho();
+        }
+
+        document.getElementById('formCheckout').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (carrinho.length === 0) {
+                alert('❌ Carrinho vazio!');
+                return;
+            }
+            
+            const pedido = {
+                cliente: {
+                    nome: document.getElementById('nomeCliente').value,
+                    email: document.getElementById('emailCliente').value,
+                    telefone: document.getElementById('telefoneCliente').value,
+                    endereco: document.getElementById('enderecoCliente').value,
+                    cep: document.getElementById('cepCliente').value
+                },
+                itens: carrinho,
+                total: carrinho.reduce((sum, item) => sum + (item.preco * item.quantidade), 0)
+            };
+
+            try {
+                await fetch(`${API_URL}/api/clientes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pedido.cliente)
+                });
+
+                await fetch(`${API_URL}/api/pedidos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pedido)
+                });
+
+                alert('✅ Pedido realizado com sucesso! Em breve entraremos em contato.');
+                carrinho = [];
+                atualizarCarrinho();
+                fecharCarrinho();
+                document.getElementById('formCheckout').reset();
+            } catch (error) {
+                alert('❌ Erro ao finalizar pedido. Tente novamente.');
+            }
+        });
+
+        carregarProdutos();
+    </script>
+</body>
+</html>
