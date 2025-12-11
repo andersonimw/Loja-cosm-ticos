@@ -48,9 +48,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// ROTAS DA API
+// ===== ROTAS CLIENTES =====
 
-// 1. Cadastrar cliente
 app.post('/api/clientes', async (req, res) => {
   try {
     const cliente = req.body;
@@ -64,7 +63,21 @@ app.post('/api/clientes', async (req, res) => {
   }
 });
 
-// 2. Adicionar produto (com imagem)
+app.get('/api/clientes', async (req, res) => {
+  try {
+    const snapshot = await db.collection('clientes').orderBy('dataCadastro', 'desc').get();
+    const clientes = [];
+    snapshot.forEach(doc => {
+      clientes.push({ id: doc.id, ...doc.data() });
+    });
+    res.json(clientes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ===== ROTAS PRODUTOS =====
+
 app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
   try {
     const { nome, descricao, preco, estoque } = req.body;
@@ -85,7 +98,6 @@ app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
   }
 });
 
-// 3. Listar produtos
 app.get('/api/produtos', async (req, res) => {
   try {
     const snapshot = await db.collection('produtos').get();
@@ -99,7 +111,36 @@ app.get('/api/produtos', async (req, res) => {
   }
 });
 
-// 4. Criar pedido
+app.put('/api/produtos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nome, descricao, preco, estoque } = req.body;
+    
+    await db.collection('produtos').doc(id).update({
+      nome,
+      descricao,
+      preco: parseFloat(preco),
+      estoque: parseInt(estoque)
+    });
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/produtos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.collection('produtos').doc(id).delete();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ===== ROTAS PEDIDOS =====
+
 app.post('/api/pedidos', async (req, res) => {
   try {
     const pedido = req.body;
@@ -111,6 +152,60 @@ app.post('/api/pedidos', async (req, res) => {
     res.json({ success: true, id: docRef.id });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/pedidos', async (req, res) => {
+  try {
+    const snapshot = await db.collection('pedidos').orderBy('dataPedido', 'desc').get();
+    const pedidos = [];
+    snapshot.forEach(doc => {
+      pedidos.push({ id: doc.id, ...doc.data() });
+    });
+    res.json(pedidos);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/pedidos/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    await db.collection('pedidos').doc(id).update({ status });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ===== ESTATÍSTICAS =====
+
+app.get('/api/estatisticas', async (req, res) => {
+  try {
+    const pedidosSnapshot = await db.collection('pedidos').get();
+    const produtosSnapshot = await db.collection('produtos').get();
+    const clientesSnapshot = await db.collection('clientes').get();
+    
+    let totalVendas = 0;
+    let pedidosPendentes = 0;
+    
+    pedidosSnapshot.forEach(doc => {
+      const pedido = doc.data();
+      totalVendas += pedido.total || 0;
+      if (pedido.status === 'pendente') pedidosPendentes++;
+    });
+    
+    res.json({
+      totalPedidos: pedidosSnapshot.size,
+      totalVendas: totalVendas.toFixed(2),
+      totalProdutos: produtosSnapshot.size,
+      totalClientes: clientesSnapshot.size,
+      pedidosPendentes
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

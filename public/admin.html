@@ -3,67 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Loja de Cosméticos</title>
+    <title>Painel Admin - Loja de Cosméticos</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #e91e63; margin-bottom: 30px; text-align: center; }
-        h2 { color: #333; margin: 30px 0 20px; border-bottom: 2px solid #e91e63; padding-bottom: 10px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
-        textarea { min-height: 100px; resize: vertical; }
-        button { background: #e91e63; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background: #c2185b; }
-        .preview-img { max-width: 200px; margin-top: 10px; border-radius: 5px; display: none; }
-        .mensagem { padding: 15px; margin: 15px 0; border-radius: 5px; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        
+        .header { background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%); color: white; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        
+        .nav { background: white; padding: 15px 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; overflow-x: auto; }
+        .nav-btn { padding: 10px 20px; border: none; background: #f0f0f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; white-space: nowrap; transition: all 0.3s; }
+        .nav-btn.active { background: #e91e63; color: white; }
+        .nav-btn:hover { background: #e91e63; color: white; }
+        
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .section { display: none; }
+        .section.active { display: block; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .stat-card h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
+        .stat-card .valor { font-size: 28px; font-weight: bold; color: #e91e63; }
+        .stat-card .label { font-size: 12px; color: #999; margin-top: 5px; }
+        
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card h2 { color: #e91e63; margin-bottom: 20px; font-size: 22px; border-bottom: 2px solid #e91e63; padding-bottom: 10px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 14px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; transition: all 0.3s; }
+        .btn-primary { background: #e91e63; color: white; }
+        .btn-primary:hover { background: #c2185b; }
+        .btn-success { background: #4caf50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-warning { background: #ff9800; color: white; }
+        .btn-sm { padding: 8px 15px; font-size: 13px; }
+        
+        .preview-img { max-width: 200px; margin-top: 10px; border-radius: 8px; display: none; }
+        .mensagem { padding: 15px; margin: 15px 0; border-radius: 8px; font-weight: bold; }
         .sucesso { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .erro { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .produto-item { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px; display: flex; gap: 15px; align-items: center; }
-        .produto-item img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; }
-        .produto-info { flex: 1; }
-        .produto-info h3 { color: #e91e63; margin-bottom: 5px; }
-        .produto-info p { color: #666; margin: 3px 0; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f9f9f9; font-weight: bold; color: #333; }
+        tr:hover { background: #f5f5f5; }
+        
+        .produto-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+        
+        .status-badge { padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .status-pendente { background: #fff3cd; color: #856404; }
+        .status-processando { background: #cce5ff; color: #004085; }
+        .status-enviado { background: #d1ecf1; color: #0c5460; }
+        .status-entregue { background: #d4edda; color: #155724; }
+        .status-cancelado { background: #f8d7da; color: #721c24; }
+        
+        .pedido-item { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #e91e63; }
+        .pedido-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .pedido-info { font-size: 14px; color: #666; margin: 5px 0; }
+        .pedido-produtos { background: white; padding: 10px; margin-top: 10px; border-radius: 5px; font-size: 13px; }
+        
+        .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        .busca { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+        
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            table { font-size: 12px; }
+            .pedido-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>🌸 Painel Administrativo</h1>
+        <p>Gerencie sua loja de cosméticos</p>
+    </div>
+
+    <div class="nav">
+        <button class="nav-btn active" onclick="mostrarSecao('dashboard')">📊 Dashboard</button>
+        <button class="nav-btn" onclick="mostrarSecao('produtos')">📦 Produtos</button>
+        <button class="nav-btn" onclick="mostrarSecao('pedidos')">🛒 Pedidos</button>
+        <button class="nav-btn" onclick="mostrarSecao('clientes')">👥 Clientes</button>
+    </div>
+
     <div class="container">
-        <h1>🌸 Painel Admin - Loja de Cosméticos</h1>
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="section active">
+            <div class="stats-grid" id="estatisticas"></div>
+            
+            <div class="card">
+                <h2>📦 Adicionar Novo Produto</h2>
+                <form id="formProduto" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label>Nome do Produto:</label>
+                        <input type="text" id="nomeProduto" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição:</label>
+                        <textarea id="descricao" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Preço (R$):</label>
+                        <input type="number" id="preco" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estoque:</label>
+                        <input type="number" id="estoque" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Foto do Produto:</label>
+                        <input type="file" id="imagem" accept="image/*" required>
+                        <img id="preview" class="preview-img">
+                    </div>
+                    <button type="submit" class="btn btn-primary">➕ Adicionar Produto</button>
+                </form>
+                <div id="mensagemProduto"></div>
+            </div>
+        </div>
 
-        <h2>📦 Adicionar Produto</h2>
-        <form id="formProduto" enctype="multipart/form-data">
-            <div class="form-group">
-                <label>Nome do Produto:</label>
-                <input type="text" id="nomeProduto" required>
+        <!-- PRODUTOS -->
+        <div id="produtos" class="section">
+            <div class="card">
+                <h2>📦 Gerenciar Produtos</h2>
+                <input type="text" class="busca" id="buscaProdutos" placeholder="🔍 Buscar produtos...">
+                <div id="listaProdutos"></div>
             </div>
-            <div class="form-group">
-                <label>Descrição:</label>
-                <textarea id="descricao" required></textarea>
-            </div>
-            <div class="form-group">
-                <label>Preço (R$):</label>
-                <input type="number" id="preco" step="0.01" required>
-            </div>
-            <div class="form-group">
-                <label>Estoque:</label>
-                <input type="number" id="estoque" required>
-            </div>
-            <div class="form-group">
-                <label>Foto do Produto:</label>
-                <input type="file" id="imagem" accept="image/*" required>
-                <img id="preview" class="preview-img">
-            </div>
-            <button type="submit">➕ Adicionar Produto</button>
-        </form>
-        <div id="mensagemProduto"></div>
+        </div>
 
-        <h2>📋 Produtos Cadastrados</h2>
-        <div id="listaProdutos"></div>
+        <!-- PEDIDOS -->
+        <div id="pedidos" class="section">
+            <div class="card">
+                <h2>🛒 Gerenciar Pedidos</h2>
+                <input type="text" class="busca" id="buscaPedidos" placeholder="🔍 Buscar pedidos...">
+                <div id="listaPedidos"></div>
+            </div>
+        </div>
+
+        <!-- CLIENTES -->
+        <div id="clientes" class="section">
+            <div class="card">
+                <h2>👥 Clientes Cadastrados</h2>
+                <input type="text" class="busca" id="buscaClientes" placeholder="🔍 Buscar clientes...">
+                <div id="listaClientes"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000';
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://loja-cosmeticos.onrender.com';
+
+        function mostrarSecao(secao) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(secao).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (secao === 'dashboard') carregarEstatisticas();
+            if (secao === 'produtos') carregarProdutosAdmin();
+            if (secao === 'pedidos') carregarPedidos();
+            if (secao === 'clientes') carregarClientes();
+        }
 
         // Preview da imagem
         document.getElementById('imagem').addEventListener('change', function(e) {
@@ -101,38 +205,210 @@
                     document.getElementById('mensagemProduto').innerHTML = '<div class="mensagem sucesso">✅ Produto adicionado com sucesso!</div>';
                     document.getElementById('formProduto').reset();
                     document.getElementById('preview').style.display = 'none';
-                    carregarProdutos();
+                    carregarEstatisticas();
                 }
             } catch (error) {
                 document.getElementById('mensagemProduto').innerHTML = '<div class="mensagem erro">❌ Erro ao adicionar produto!</div>';
             }
         });
 
-        // Carregar produtos
-        async function carregarProdutos() {
+        // Carregar estatísticas
+        async function carregarEstatisticas() {
+            try {
+                const response = await fetch(`${API_URL}/api/estatisticas`);
+                const stats = await response.json();
+                
+                document.getElementById('estatisticas').innerHTML = `
+                    <div class="stat-card">
+                        <h3>Total de Vendas</h3>
+                        <div class="valor">R$ ${stats.totalVendas}</div>
+                        <div class="label">${stats.totalPedidos} pedidos</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pedidos Pendentes</h3>
+                        <div class="valor">${stats.pedidosPendentes}</div>
+                        <div class="label">Aguardando processamento</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Produtos Cadastrados</h3>
+                        <div class="valor">${stats.totalProdutos}</div>
+                        <div class="label">Itens no catálogo</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Clientes</h3>
+                        <div class="valor">${stats.totalClientes}</div>
+                        <div class="label">Cadastros realizados</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        // Carregar produtos (admin)
+        async function carregarProdutosAdmin() {
             try {
                 const response = await fetch(`${API_URL}/api/produtos`);
                 const produtos = await response.json();
                 
                 const lista = document.getElementById('listaProdutos');
-                lista.innerHTML = produtos.map(p => `
-                    <div class="produto-item">
-                        <img src="${API_URL}${p.imagemUrl}" alt="${p.nome}">
-                        <div class="produto-info">
-                            <h3>${p.nome}</h3>
-                            <p>${p.descricao}</p>
-                            <p><strong>R$ ${p.preco.toFixed(2)}</strong></p>
-                            <p>Estoque: ${p.estoque} unidades</p>
-                        </div>
-                    </div>
-                `).join('');
+                lista.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Imagem</th>
+                                <th>Nome</th>
+                                <th>Preço</th>
+                                <th>Estoque</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${produtos.map(p => `
+                                <tr>
+                                    <td><img src="${API_URL}${p.imagemUrl}" class="produto-img"></td>
+                                    <td><strong>${p.nome}</strong><br><small>${p.descricao}</small></td>
+                                    <td>R$ ${p.preco.toFixed(2)}</td>
+                                    <td>${p.estoque} un.</td>
+                                    <td class="acoes">
+                                        <button class="btn btn-sm btn-warning" onclick="editarProduto('${p.id}')">✏️ Editar</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deletarProduto('${p.id}', '${p.nome}')">🗑️ Deletar</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
             } catch (error) {
                 console.error('Erro ao carregar produtos:', error);
             }
         }
 
-        // Carregar produtos ao abrir a página
-        carregarProdutos();
+        // Editar produto
+        function editarProduto(id) {
+            const nome = prompt('Novo nome:');
+            const descricao = prompt('Nova descrição:');
+            const preco = prompt('Novo preço:');
+            const estoque = prompt('Novo estoque:');
+            
+            if (nome && descricao && preco && estoque) {
+                fetch(`${API_URL}/api/produtos/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, descricao, preco, estoque })
+                }).then(() => {
+                    alert('✅ Produto atualizado!');
+                    carregarProdutosAdmin();
+                });
+            }
+        }
+
+        // Deletar produto
+        function deletarProduto(id, nome) {
+            if (confirm(`Tem certeza que deseja deletar "${nome}"?`)) {
+                fetch(`${API_URL}/api/produtos/${id}`, {
+                    method: 'DELETE'
+                }).then(() => {
+                    alert('✅ Produto deletado!');
+                    carregarProdutosAdmin();
+                    carregarEstatisticas();
+                });
+            }
+        }
+
+        // Carregar pedidos
+        async function carregarPedidos() {
+            try {
+                const response = await fetch(`${API_URL}/api/pedidos`);
+                const pedidos = await response.json();
+                
+                const lista = document.getElementById('listaPedidos');
+                lista.innerHTML = pedidos.map(p => `
+                    <div class="pedido-item">
+                        <div class="pedido-header">
+                            <div>
+                                <strong>Pedido #${p.id.substring(0, 8)}</strong><br>
+                                <span class="status-badge status-${p.status}">${p.status.toUpperCase()}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <strong style="color: #e91e63; font-size: 20px;">R$ ${p.total.toFixed(2)}</strong>
+                            </div>
+                        </div>
+                        <div class="pedido-info">
+                            <strong>Cliente:</strong> ${p.cliente.nome}<br>
+                            <strong>Email:</strong> ${p.cliente.email}<br>
+                            <strong>Telefone:</strong> ${p.cliente.telefone}<br>
+                            <strong>Endereço:</strong> ${p.cliente.endereco}, CEP: ${p.cliente.cep}
+                        </div>
+                        <div class="pedido-produtos">
+                            <strong>Itens:</strong><br>
+                            ${p.itens.map(item => `${item.quantidade}x ${item.nome} (${item.tipo.toUpperCase()}) - R$ ${(item.preco * item.quantidade).toFixed(2)}`).join('<br>')}
+                        </div>
+                        <div class="acoes" style="margin-top: 15px;">
+                            <button class="btn btn-sm btn-warning" onclick="alterarStatus('${p.id}', 'processando')">⏳ Processando</button>
+                            <button class="btn btn-sm btn-primary" onclick="alterarStatus('${p.id}', 'enviado')">🚚 Enviado</button>
+                            <button class="btn btn-sm btn-success" onclick="alterarStatus('${p.id}', 'entregue')">✅ Entregue</button>
+                            <button class="btn btn-sm btn-danger" onclick="alterarStatus('${p.id}', 'cancelado')">❌ Cancelar</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar pedidos:', error);
+            }
+        }
+
+        // Alterar status do pedido
+        async function alterarStatus(id, status) {
+            try {
+                await fetch(`${API_URL}/api/pedidos/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                alert(`✅ Status alterado para: ${status}`);
+                carregarPedidos();
+                carregarEstatisticas();
+            } catch (error) {
+                alert('❌ Erro ao alterar status');
+            }
+        }
+
+        // Carregar clientes
+        async function carregarClientes() {
+            try {
+                const response = await fetch(`${API_URL}/api/clientes`);
+                const clientes = await response.json();
+                
+                const lista = document.getElementById('listaClientes');
+                lista.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Telefone</th>
+                                <th>Endereço</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${clientes.map(c => `
+                                <tr>
+                                    <td><strong>${c.nome}</strong></td>
+                                    <td>${c.email}</td>
+                                    <td>${c.telefone}</td>
+                                    <td>${c.endereco}, CEP: ${c.cep}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Erro ao carregar clientes:', error);
+            }
+        }
+
+        // Carregar dashboard ao iniciar
+        carregarEstatisticas();
     </script>
 </body>
 </html>
